@@ -1,0 +1,131 @@
+    [
+        {
+            "WorkflowName": "Simple",
+            "GlobalParams": [
+                {
+                    "Name": "incorporationYear",
+                    "Expression": "input1.IncorporationDate.Year"
+                }
+            ],
+            "Rules": [
+                {
+                    "RuleName": "CheckCountry",
+                    "ErrorMessage": "Service not available in this country",
+                    "RuleExpressionType": "LambdaExpression",
+                    "Expression": "input1.IncorporationCountryCode == \"IE\" || input1.IncorporationCountryCode == \"FR\"",
+                    "Actions": {
+                        "OnFailure": {
+                            "Name": "OutputExpression",
+                            "Context": {
+                                "Expression": "input1.IncorporationCountryCode"
+                            }
+                        }
+                    }
+                },
+                {
+                    "RuleName": "AltCheckCountry",
+                    "Operator": "Or",
+                    "ErrorMessage": "Service not available in this country",
+                    "Rules": [
+                        {
+                            "RuleName" : "IsIrish",
+                            "SuccessEvent": "IE",
+                            "Expression": "input1.IncorporationCountryCode == \"IE\""
+                        },
+                        {
+                            "RuleName" : "IsFrench",
+                            "SuccessEvent": "FR",
+                            "Expression": "input1.IncorporationCountryCode == \"FR\""
+                        }
+                    ],
+                    "Actions": {
+                        "OnFailure": {
+                            "Name": "OutputExpression",
+                            "Context": {
+                                "Expression": "input1.IncorporationCountryCode"
+                            }
+                        }
+                    }
+                },
+                {
+                    "RuleName": "QuickCheckIncorporationAge",
+                    "SuccessEvent": "Ok",
+                    "ErrorMessage": "Company does not meet incorporation age requirements",
+                    "RuleExpressionType": "LambdaExpression",
+                    "Expression": "(DateTime.Today.Year - incorporationYear) >= 5"
+                },
+                {
+                    "RuleName": "MatureCompanyRule",
+                    "SuccessEvent": "Ok",
+                    "ErrorMessage": "Company does not meet incorporation age requirements",
+                    "RuleExpressionType": "LambdaExpression",
+                    "Expression": "(DateTime.Today.Year - incorporationYear) >= 10",
+                    "Actions": {
+                        "OnSuccess":{
+                            "Name": "EvaluateRule",
+                            "Context": {
+                                "WorkflowName": "MatureCompanyRules",
+                                "RuleName": "CheckMatureProfitMovingAverage"
+                            }
+                        }
+                    }
+                },
+                {
+                    "RuleName": "CheckDirectors",
+                    "LocalParams":[
+                        {
+                            "Name": "NumberOfDirectors",
+                            "Expression": "input1.Directors.Count"
+                        }
+                    ],
+                    "SuccessEvent": "Ok",
+                    "ErrorMessage": "Company does not have the required number of directors",
+                    "RuleExpressionType": "LambdaExpression",
+                    "Expression": "NumberOfDirectors > 4"
+                },
+                {
+                    "RuleName": "CheckProfitMovingAverage",
+                    "SuccessEvent": "Ok",
+                    "ErrorMessage": "Company does meet the profitability requirements",
+                    "RuleExpressionType": "LambdaExpression",
+                    "Expression": "ComplexRules.ProfitMovingAverage(input1.AnnualProfit, 5) >= 10000.00m",
+                    "Actions": {
+                        "OnSuccess": {
+                            "Name": "OutputExpression",
+                            "Context": {
+                                "Expression": "ComplexRules.ProfitMovingAverage(input1.AnnualProfit, 5) * 0.8"
+                            }
+                        },
+                        "OnFailure": {
+                            "Name": "OutputExpression",
+                            "Context": {
+                                "Expression": "ComplexRules.ProfitMovingAverage(input1.AnnualProfit, 5) * 0.3"
+                            }
+                        }
+                    }
+                },
+                {
+                    "RuleName": "CreditScore",
+                    "Operator": "Or",
+                    "ErrorMessage": "Credit Score is below required Level",
+                    "Rules": [
+                        {
+                            "RuleName": "StrongProspect",
+                            "SuccessEvent": "Green",
+                            "Expression" : "input1.CreditRating >= 75f"
+                        },
+                        {
+                            "RuleName": "ModerateProspect",
+                            "SuccessEvent": "Amber",
+                            "Expression" : "input1.CreditRating >= 40f && input1.CreditRating <75f"
+                        },
+                        {
+                            "RuleName": "RejectProspect",
+                            "SuccessEvent": "Red",
+                            "Expression" : "input1.CreditRating < 40f"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]

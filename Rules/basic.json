@@ -1,0 +1,12 @@
+[
+    {
+        "WorkflowName": "Basic",
+        "Rules": [
+            {
+                "RuleName": "CheckCountry",
+                "RuleExpressionType": "LambdaExpression",
+                "Expression": "input1.IncorporationCountryCode == \"IE\""
+            }
+        ]
+    }
+]

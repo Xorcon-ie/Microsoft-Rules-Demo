@@ -1,0 +1,23 @@
+[
+    {
+        "WorkflowName": "MatureCompanyRules",
+        "Rules": [
+            {
+                "RuleName": "CheckMatureProfitMovingAverage",
+                "SuccessEvent": "ok",
+                "ErrorMessage": "Company does meet the profitability requirements",
+                "ErrorType": "Error",
+                "RuleExpressionType": "LambdaExpression",
+                "Expression": "ComplexRules.ProfitMovingAverage(input1.AnnualProfit, 5) >= 50000.00m",
+                "Actions": {
+                    "OnSuccess": {
+                        "Name": "OutputExpression",
+                        "Context": {
+                            "Expression": "ComplexRules.ProfitMovingAverage(input1.AnnualProfit, 5) * 3.0"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+]
